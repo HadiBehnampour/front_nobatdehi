@@ -1,0 +1,30 @@
+/* 1. ایمپورت کردن هسته جدید تیلویند */
+@import "tailwindcss";
+
+/* 2. ایمپورت فونت */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&display=swap');
+
+/* 3. تعریف تم (رنگ‌ها و فونت‌ها) */
+@theme {
+  /* تنظیم فونت وزیر */
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui;
+
+  /* پالت رنگی اختصاصی (دقیقا مطابق کدهای قبلی) */
+  --color-brand-light: #e9f5db;
+  --color-brand: #3fa34d;
+  --color-brand-dark: #2e7d32;
+  --color-brand-text: #1b4332;
+}
+
+/* 4. استایل‌های پایه */
+body {
+  background-color: var(--color-brand-light);
+  color: var(--color-brand-text);
+  font-family: var(--font-sans);
+  direction: rtl;
+}
+
+/* 5. اسکرول‌بار */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--color-brand-light); }
+::-webkit-scrollbar-thumb { background: var(--color-brand); border-radius: 4px; }

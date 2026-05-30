@@ -1,0 +1,37 @@
+/* pages/auth/auth.css
+ * Authentication-specific styles
+ * Add this to your global index.css OR import in auth/index.jsx
+ */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* Custom thin scrollbar for the profile form */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 */
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Soft pulse for active stage indicator (optional) */
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
+  50% { box-shadow: 0 0 0 8px rgba(14, 165, 233, 0.05); }
+}
