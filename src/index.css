@@ -1,30 +1,103 @@
-/* 1. ایمپورت کردن هسته جدید تیلویند */
+/* 1. Import Tailwind */
 @import "tailwindcss";
 
-/* 2. ایمپورت فونت */
+/* 2. Font */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&display=swap');
 
-/* 3. تعریف تم (رنگ‌ها و فونت‌ها) */
+/* 3. Theme — Arena blue palette */
 @theme {
-  /* تنظیم فونت وزیر */
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui;
 
-  /* پالت رنگی اختصاصی (دقیقا مطابق کدهای قبلی) */
-  --color-brand-light: #e9f5db;
-  --color-brand: #3fa34d;
-  --color-brand-dark: #2e7d32;
-  --color-brand-text: #1b4332;
+  /* Primary blue (arena) */
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+
+  /* Surface */
+  --color-surface: #f8fafc;
+  --color-surface-card: #ffffff;
+  --color-surface-border: #e2e8f0;
+  --color-surface-muted: #f1f5f9;
+
+  /* Backward compat — brand aliases */
+  --color-brand-light: #eff6ff;
+  --color-brand: #2563eb;
+  --color-brand-dark: #1d4ed8;
+  --color-brand-text: #1e3a8a;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / .07), 0 1px 2px -1px rgb(0 0 0 / .07);
+  --shadow-elevated: 0 4px 16px 0 rgb(37 99 235 / .12);
 }
 
-/* 4. استایل‌های پایه */
+/* 4. Base */
+:root { --sidebar-w: 260px; }
+* { box-sizing: border-box; }
 body {
-  background-color: var(--color-brand-light);
-  color: var(--color-brand-text);
+  background-color: var(--color-surface);
+  color: #1e293b;
   font-family: var(--font-sans);
   direction: rtl;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
 }
+.ltr { direction: ltr; text-align: left; }
 
-/* 5. اسکرول‌بار */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--color-brand-light); }
-::-webkit-scrollbar-thumb { background: var(--color-brand); border-radius: 4px; }
+/* 5. Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface-muted); }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+
+/* 6. Arena utility classes */
+.card { background: white; border-radius: 1rem; border: 1px solid var(--color-surface-border); box-shadow: var(--shadow-card); padding: 1.25rem; }
+.btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--color-primary-600); color: white; font-size: 0.875rem; font-weight: 500; border-radius: 0.75rem; transition: background 0.2s; border: none; cursor: pointer; }
+.btn-primary:hover { background: var(--color-primary-700); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--color-surface-muted); color: #334155; font-size: 0.875rem; font-weight: 500; border-radius: 0.75rem; transition: background 0.2s; border: none; cursor: pointer; }
+.btn-secondary:hover { background: var(--color-surface-border); }
+.btn-danger { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fef2f2; color: #dc2626; font-size: 0.875rem; font-weight: 500; border-radius: 0.75rem; transition: background 0.2s; border: none; cursor: pointer; }
+.btn-danger:hover { background: #fee2e2; }
+.input { width: 100%; border-radius: 0.75rem; border: 1px solid var(--color-surface-border); background: white; padding: 0.625rem 0.75rem; font-size: 0.875rem; color: #334155; outline: none; transition: all 0.2s; }
+.input:focus { box-shadow: 0 0 0 2px var(--color-primary-500); border-color: transparent; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+.badge-green { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.badge-yellow { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.badge-red { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.badge-blue { background: var(--color-primary-50); color: var(--color-primary-700); border: 1px solid var(--color-primary-200); }
+.badge-gray { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+/* Sidebar */
+.sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 500; color: #475569; transition: all 0.2s; text-decoration: none; }
+.sidebar-link:hover { background: var(--color-primary-50); color: var(--color-primary-700); }
+.sidebar-link.active { background: var(--color-primary-50); color: var(--color-primary-700); }
+
+/* Tables */
+.table-container { overflow-x: auto; border-radius: 0.75rem; border: 1px solid var(--color-surface-border); background: white; }
+table { width: 100%; font-size: 0.875rem; border-collapse: collapse; }
+thead tr { background: var(--color-surface-muted); border-bottom: 1px solid var(--color-surface-border); }
+thead th { padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+tbody tr { border-bottom: 1px solid var(--color-surface-border); transition: background 0.2s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(241, 245, 249, 0.5); }
+tbody td { padding: 0.75rem 1rem; color: #334155; }
+
+/* Stat card */
+.stat-card { background: white; border-radius: 1rem; border: 1px solid var(--color-surface-border); box-shadow: var(--shadow-card); padding: 1.25rem; display: flex; align-items: flex-start; gap: 1rem; }
+.stat-icon { width: 3rem; height: 3rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn .25s ease both; }
+@keyframes shake { 0%{transform:translateX(0)} 15%{transform:translateX(-8px)} 30%{transform:translateX(7px)} 45%{transform:translateX(-6px)} 60%{transform:translateX(5px)} 75%{transform:translateX(-3px)} 90%{transform:translateX(2px)} 100%{transform:translateX(0)} }
+
+/* Auth scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }

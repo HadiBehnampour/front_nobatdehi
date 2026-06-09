@@ -123,7 +123,8 @@ const useAuth = () => {
         localStorage.setItem('user', JSON.stringify(data.user));
 
         const role = (data.user?.role || '').toLowerCase().trim();
-        navigate(role === 'admin' || role === 'doctor' ? '/admin' : '/patient');
+        const routeMap = { platform_admin:'/platform/dashboard',clinic_admin:'/admin',doctor:'/admin',secretary:'/admin',admin:'/admin',patient:'/patient' };
+        navigate(routeMap[role] || '/');
         return;
       }
 

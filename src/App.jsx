@@ -30,6 +30,13 @@ const AdminPatientHistory = lazy(() => import('./pages/admin/patient-history'));
 const AdminConsults = lazy(() => import('./pages/admin/Consults'));
 const AdminFinance = lazy(() => import('./pages/admin/finance'));
 const AdminSettings = lazy(() => import('./pages/admin/settings'));
+const AdminStaff = lazy(() => import('./pages/admin/staff'));
+
+// صفحات پلتفرم
+import PlatformLayout from './layouts/PlatformLayout';
+const PlatformDashboard = lazy(() => import('./pages/platform/Dashboard'));
+const PlatformClinics = lazy(() => import('./pages/platform/Clinics'));
+const PlatformPlans = lazy(() => import('./pages/platform/Plans'));
 
 // --- Page Loader ---
 const PageLoader = () => (
@@ -97,7 +104,18 @@ function App() {
             <Route path="patient-history/:id" element={<AdminPatientHistory />} />
             <Route path="consults" element={<AdminConsults />} />
             <Route path="finance" element={<AdminFinance />} />
+            <Route path="staff" element={<AdminStaff />} />
             <Route path="settings" element={<AdminSettings />} />
+          </Route>
+
+          {/* پنل پلتفرم */}
+          <Route path="/platform" element={
+            <AdminRoute><PlatformLayout /></AdminRoute>
+          }>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<PlatformDashboard />} />
+            <Route path="clinics" element={<PlatformClinics />} />
+            <Route path="plans" element={<PlatformPlans />} />
           </Route>
 
           {/* مسیر اشتباه */}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  LayoutGrid, 
+  LayoutGrid, UserCog, 
   Calendar, 
   Users, 
   MessageSquare, 
@@ -45,14 +45,28 @@ const AdminLayout = () => {
     day: 'numeric',
   });
 
-  const menuItems = [
-    { title: 'داشبورد', icon: <LayoutGrid size={20} />, path: '/admin/dashboard' },
-    { title: 'مدیریت نوبت‌ها', icon: <Calendar size={20} />, path: '/admin/appointments' },
-    { title: 'لیست بیماران', icon: <Users size={20} />, path: '/admin/patients' },
-    { title: 'مشاوره‌ها', icon: <MessageSquare size={20} />, path: '/admin/consults' },
-    { title: 'امور مالی', icon: <Wallet size={20} />, path: '/admin/finance' },
-    { title: 'تنظیمات مطب', icon: <Settings size={20} />, path: '/admin/settings' },
+  // ── نقش کاربر ──
+  const getUserRole = () => {
+    try { return JSON.parse(localStorage.getItem('user')).role; } catch { return 'admin'; }
+  };
+  const role = getUserRole();
+
+  const ROLE_LABELS = {
+    platform_admin: 'مدیر پلتفرم', clinic_admin: 'مدیر مطب',
+    doctor: 'پزشک', secretary: 'منشی', admin: 'مدیر سیستم',
+  };
+
+  // ── منوی هوشمند بر اساس نقش ──
+  const allMenuItems = [
+    { title: 'داشبورد', icon: <LayoutGrid size={20} />, path: '/admin/dashboard', roles: ['platform_admin','clinic_admin','doctor','secretary','admin'] },
+    { title: 'مدیریت نوبت‌ها', icon: <Calendar size={20} />, path: '/admin/appointments', roles: ['clinic_admin','secretary','admin'] },
+    { title: 'لیست بیماران', icon: <Users size={20} />, path: '/admin/patients', roles: ['clinic_admin','doctor','secretary','admin'] },
+    { title: 'مشاوره‌ها', icon: <MessageSquare size={20} />, path: '/admin/consults', roles: ['clinic_admin','doctor','admin'] },
+    { title: 'امور مالی', icon: <Wallet size={20} />, path: '/admin/finance', roles: ['clinic_admin','admin'] },
+    { title: 'مدیریت پرسنل', icon: <UserCog size={20} />, path: '/admin/staff', roles: ['clinic_admin','admin'] },
+    { title: 'تنظیمات مطب', icon: <Settings size={20} />, path: '/admin/settings', roles: ['clinic_admin','admin'] },
   ];
+  const menuItems = allMenuItems.filter(item => item.roles.includes(role));
 
   const handleLogout = () => {
     localStorage.removeItem('access');
@@ -147,7 +161,7 @@ const AdminLayout = () => {
             <div className="flex items-center gap-3">
                 <div className="text-left hidden md:block">
                     <span className="block text-sm font-bold text-gray-800">{adminInfo.name}</span>
-                    <span className="block text-xs text-brand">مدیر سیستم</span>
+                    <span className="block text-xs text-brand">{ROLE_LABELS[role] || 'کاربر'}</span>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-bold text-lg shadow-sm">
                     {adminInfo.initial}

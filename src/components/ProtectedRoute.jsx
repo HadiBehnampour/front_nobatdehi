@@ -1,55 +1,32 @@
 import { Navigate } from 'react-router-dom';
 
-// چک کردن لاگین بودن
-const isAuthenticated = () => {
-  return !!localStorage.getItem('access');
-};
+const isAuthenticated = () => !!localStorage.getItem('access');
 
-// گرفتن نقش کاربر
 const getUserRole = () => {
-  const user = localStorage.getItem('user');
-  if (user) {
-    try {
-      return JSON.parse(user).role;
-    } catch {
-      return null;
-    }
-  }
-  return null;
+  try { return JSON.parse(localStorage.getItem('user')).role; }
+  catch { return null; }
 };
 
-// ─── محافظت از صفحات (فقط لاگین) ───
+const STAFF_ROLES = ['platform_admin', 'clinic_admin', 'doctor', 'secretary', 'admin'];
+
+// هر کسی که لاگین کرده
 export const ProtectedRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" replace />;
-  }
+  if (!isAuthenticated()) return <Navigate to="/" replace />;
   return children;
 };
 
-// ─── فقط ادمین ───
+// کارکنان مطب (همه بجز بیمار)
 export const AdminRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" replace />;
-  }
-  
+  if (!isAuthenticated()) return <Navigate to="/" replace />;
   const role = getUserRole();
-  if (role !== 'admin') {
-    return <Navigate to="/patient/dashboard" replace />;
-  }
-  
+  if (!STAFF_ROLES.includes(role)) return <Navigate to="/patient/dashboard" replace />;
   return children;
 };
 
-// ─── فقط بیمار ───
+// فقط بیمار
 export const PatientRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" replace />;
-  }
-  
+  if (!isAuthenticated()) return <Navigate to="/" replace />;
   const role = getUserRole();
-  if (role !== 'patient') {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  
+  if (role !== 'patient') return <Navigate to="/admin/dashboard" replace />;
   return children;
 };
