@@ -1,60 +1,34 @@
 import { useState, useEffect } from "react";
-import { Check, Edit2, Plus, X, Loader2, Package, Save, Trash2, PieChart as PieChartIcon, Users, Calendar, Percent } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import jalaali from "jalaali-js";
-import DatePicker from "react-multi-date-picker";
-import persian from "react-date-object/calendars/persian";
-import persian_fa from "react-date-object/locales/persian_fa";
+import { Check, Edit2, Plus, X, Loader2, Package, Save, Trash2, PieChart as PieChartIcon, Users, MessageSquare, Shield, Layers, HelpCircle, AlertCircle } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import apiClient from "../../api/core";
 
 const fmt = (n) => new Intl.NumberFormat("fa-IR").format(n);
 const fmtInput = (v) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 const unfmt = (v) => parseInt(v.toString().replace(/,/g, "")) || 0;
 
-// تبدیل میلادی به شمسی برای نمایش
-const toJalaali = (dateStr) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  const { jy, jm, jd } = jalaali.toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-  return `${jy}/${jm.toString().padStart(2, '0')}/${jd.toString().padStart(2, '0')}`;
-};
-
-// تبدیل شمسی به میلادی برای ذخیره
-const toGregorian = (jalaliStr) => {
-  if (!jalaliStr || !jalaliStr.includes("/")) return "";
-  const [jy, jm, jd] = jalaliStr.split("/").map(Number);
-  if (!jy || !jm || !jd) return "";
-  const { gy, gm, gd } = jalaali.toGregorian(jy, jm, jd);
-  return `${gy}-${gm.toString().padStart(2, '0')}-${gd.toString().padStart(2, '0')}`;
-};
-
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 const colorMap = {
-  slate: { card: "border-slate-200", badge: "bg-slate-100 text-slate-700", btn: "bg-slate-700 hover:bg-slate-800 text-white" },
-  primary: { card: "border-primary-300 ring-2 ring-primary-100", badge: "bg-primary-100 text-primary-700", btn: "bg-primary-600 hover:bg-primary-700 text-white" },
-  yellow: { card: "border-amber-300", badge: "bg-amber-100 text-amber-700", btn: "bg-amber-500 hover:bg-amber-600 text-white" },
-  emerald: { card: "border-emerald-200", badge: "bg-emerald-100 text-emerald-700", btn: "bg-emerald-600 hover:bg-emerald-700 text-white" },
-  rose: { card: "border-rose-200", badge: "bg-rose-100 text-rose-700", btn: "bg-rose-600 hover:bg-rose-700 text-white" },
+  slate: { accent: "bg-slate-400", border: "border-slate-100", text: "text-slate-600", bg: "bg-slate-50", label: "خاکستری" },
+  primary: { accent: "bg-blue-600", border: "border-blue-200 shadow-blue-50/50", text: "text-blue-600", bg: "bg-blue-50/50", label: "آبی ویژه" },
+  yellow: { accent: "bg-amber-500", border: "border-amber-200 shadow-amber-50/50", text: "text-amber-600", bg: "bg-amber-50/50", label: "طلایی" },
+  emerald: { accent: "bg-emerald-500", border: "border-emerald-200 shadow-emerald-50/50", text: "text-emerald-600", bg: "bg-emerald-50/50", label: "سبز" },
+  rose: { accent: "bg-rose-500", border: "border-rose-200 shadow-rose-50/50", text: "text-rose-600", bg: "bg-rose-50/50", label: "قرمز" },
 };
 
-// ── مودال ساخت/ویرایش ──
+// ── مودال ساخت/ویرایش بدون تب (ساختار منسجم تک صفحه‌ای) ──
 function PlanModal({ open, onClose, onSave, plan }) {
-  const [tab, setTab] = useState(0);
   const [form, setForm] = useState({
     title: "", duration: "ماهانه", price: 0,
     maxDoctors: 1, maxSecretaries: 1, smsCredits: 100,
     analytics: false, eprescribe: false, customSms: false,
-    color: "slate", badge: "", description: "",
-    discount_percentage: 0,
-    discount_start_date: "",
-    discount_end_date: "",
+    color: "slate", description: "",
     features: [],
   });
   
-  // فیلدهای کمکی برای تقویم شمسی
-  const [jalaliStart, setJalaliStart] = useState("");
-  const [jalaliEnd, setJalaliEnd] = useState("");
+  const [newFeature, setNewFeature] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (plan) {
@@ -69,54 +43,40 @@ function PlanModal({ open, onClose, onSave, plan }) {
         eprescribe: plan.flags?.eprescribe || false,
         customSms: plan.flags?.customSms || false,
         color: plan.color || "slate",
-        badge: plan.badge || "",
         description: plan.description || "",
-        discount_percentage: plan.discount_percentage || 0,
-        discount_start_date: plan.discount_start_date || "",
-        discount_end_date: plan.discount_end_date || "",
         features: plan.features || [],
       });
-      setJalaliStart(toJalaali(plan.discount_start_date));
-      setJalaliEnd(toJalaali(plan.discount_end_date));
     } else {
       setForm({
         title: "", duration: "ماهانه", price: 0,
         maxDoctors: 1, maxSecretaries: 1, smsCredits: 100,
         analytics: false, eprescribe: false, customSms: false,
-        color: "slate", badge: "", description: "",
-        discount_percentage: 0, discount_start_date: "", discount_end_date: "",
+        color: "slate", description: "",
         features: [],
       });
-      setJalaliStart("");
-      setJalaliEnd("");
     }
   }, [plan, open]);
 
-  const handleJalaliChange = (val, field) => {
-    if (field === 'start') {
-      setJalaliStart(val);
-      if (val.length === 10) setForm(p => ({...p, discount_start_date: toGregorian(val)}));
-    } else {
-      setJalaliEnd(val);
-      if (val.length === 10) setForm(p => ({...p, discount_end_date: toGregorian(val)}));
-    }
-  };
-
-  const [newFeature, setNewFeature] = useState("");
-  const [saving, setSaving] = useState(false);
-
   if (!open) return null;
 
-  const tabs = ["پایه و مالی", "محدودیت و ماژول", "ویژگی‌ها و تخفیف"];
-
   const handleSubmit = async () => {
-    if (!form.title) { alert("عنوان الزامی است"); return; }
+    if (!form.title.trim()) { alert("عنوان پکیج الزامی است"); return; }
     setSaving(true);
     try {
-      await onSave(form, plan?.id);
+      // ارسال تخفیف‌ها به صورت صفر و نال به بک‌اند جهت هماهنگی کامل با دیتابیس
+      const payload = {
+        ...form,
+        discount_percentage: 0,
+        discount_start_date: null,
+        discount_end_date: null,
+      };
+      await onSave(payload, plan?.id);
       onClose();
-    } catch (e) { alert(e?.response?.data?.error || "خطا در ذخیره"); }
-    finally { setSaving(false); }
+    } catch (e) { 
+      alert(e?.response?.data?.error || "خطا در ذخیره اطلاعات"); 
+    } finally { 
+      setSaving(false); 
+    }
   };
 
   const addFeature = () => {
@@ -130,163 +90,151 @@ function PlanModal({ open, onClose, onSave, plan }) {
   };
 
   return (
-    <div className={open ? "modal-backdrop" : "hidden"} onClick={onClose}>
-      <div className="modal-content max-w-xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
-          <h3 className="text-base font-semibold text-slate-800">{plan ? `ویرایش: ${plan.title}` : "ایجاد پکیج جدید"}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-muted text-slate-500"><X size={18} /></button>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-content max-w-2xl max-h-[92vh] border border-slate-100" onClick={e => e.stopPropagation()}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+          <div>
+            <h3 className="text-lg font-black text-slate-800">
+              {plan ? `ویرایش پکیج: ${plan.title}` : "ایجاد پکیج اشتراک جدید"}
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">اطلاعات، محدودیت‌ها و ماژول‌های پکیج را تنظیم نمایید</p>
+          </div>
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-400 transition-colors">
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-surface-border bg-slate-50">
-          {tabs.map((t, i) => (
-            <button key={i} onClick={() => setTab(i)}
-              className={`flex-1 py-3 text-xs font-medium transition ${tab === i ? "text-primary-600 bg-white border-b-2 border-primary-600" : "text-slate-400 hover:text-slate-600"}`}>
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          {tab === 0 && (
+        {/* Content (Single Scrollable Layout) */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 custom-scrollbar">
+          
+          {/* Section 1: اطلاعات پایه و مالی */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-100">
+              <Layers size={14} className="text-primary-500" /> ۱. اطلاعات پایه و مالی
+            </h4>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">عنوان پکیج <span className="text-red-400">*</span></label>
-                <input className="input" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="مثال: استاندارد" />
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">عنوان پکیج <span className="text-red-500">*</span></label>
+                <input className="input focus:ring-primary-500" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} placeholder="مثال: نقره‌ای، پیشرفته، VIP" />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">مدت</label>
-                <select className="input" value={form.duration} onChange={e => setForm(p => ({...p, duration: e.target.value}))}>
-                  <option>ماهانه</option><option>۳ ماهه</option><option>۶ ماهه</option><option>سالانه</option><option>یک هفته</option>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">مدت دوره</label>
+                <select className="input focus:ring-primary-500 bg-white" value={form.duration} onChange={e => setForm(p => ({...p, duration: e.target.value}))}>
+                  <option>ماهانه</option>
+                  <option>۳ ماهه</option>
+                  <option>۶ ماهه</option>
+                  <option>سالانه</option>
+                  <option>یک هفته</option>
                 </select>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">قیمت (تومان)</label>
-                <input className="input ltr text-left" value={fmtInput(form.price)} onChange={e => setForm(p => ({...p, price: unfmt(e.target.value)}))} inputMode="numeric" />
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">قیمت (تومان)</label>
+                <div className="relative">
+                  <input className="input ltr text-left pl-14 font-semibold" value={form.price ? fmtInput(form.price) : ""} onChange={e => setForm(p => ({...p, price: unfmt(e.target.value)}))} inputMode="numeric" placeholder="۰" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 pointer-events-none">تومان</span>
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">رنگ پکیج</label>
-                <select className="input" value={form.color} onChange={e => setForm(p => ({...p, color: e.target.value}))}>
-                  <option value="slate">خاکستری</option>
-                  <option value="primary">آبی (ویژه)</option>
-                  <option value="yellow">طلایی</option>
-                  <option value="emerald">سبز</option>
-                  <option value="rose">قرمز</option>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">رنگ تم و تمایز پکیج</label>
+                <select className="input focus:ring-primary-500 bg-white" value={form.color} onChange={e => setForm(p => ({...p, color: e.target.value}))}>
+                  <option value="slate">خاکستری (ساده)</option>
+                  <option value="primary">آبی (ویژه / پرطرفدار)</option>
+                  <option value="yellow">طلایی (بسته‌های VIP)</option>
+                  <option value="emerald">سبز (اقتصادی)</option>
+                  <option value="rose">قرمز (نامحدود)</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-1.5">توضیحات کوتاه پکیج</label>
+              <textarea className="input min-h-[80px] focus:ring-primary-500 leading-relaxed" value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} placeholder="توضیح کوتاه جهت نمایش در کارت پکیج..." />
+            </div>
+          </div>
+
+          {/* Section 2: محدودیت‌ها و ماژول‌ها */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-100">
+              <Shield size={14} className="text-emerald-500" /> ۲. محدودیت‌های دسترسی و ماژول‌های سیستم
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">بج (Badge)</label>
-                <input className="input" value={form.badge} onChange={e => setForm(p => ({...p, badge: e.target.value}))} placeholder="مثال: محبوب‌ترین" />
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">تعداد پزشک مجاز</label>
+                <input className="input ltr text-left font-bold" type="number" min="1" value={form.maxDoctors} onChange={e => setForm(p => ({...p, maxDoctors: parseInt(e.target.value) || 1}))} />
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">توضیحات کوتاه</label>
-                <textarea className="input min-h-[80px]" value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} />
-              </div>
-            </div>
-          )}
-
-          {tab === 1 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">تعداد پزشک مجاز</label>
-                  <input className="input ltr text-left" type="number" value={form.maxDoctors} onChange={e => setForm(p => ({...p, maxDoctors: parseInt(e.target.value) || 0}))} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">تعداد منشی مجاز</label>
-                  <input className="input ltr text-left" type="number" value={form.maxSecretaries} onChange={e => setForm(p => ({...p, maxSecretaries: parseInt(e.target.value) || 0}))} />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">سهمیه پیامک رایگان</label>
-                  <input className="input ltr text-left" type="number" value={form.smsCredits} onChange={e => setForm(p => ({...p, smsCredits: parseInt(e.target.value) || 0}))} />
-                </div>
-              </div>
-              <div className="space-y-2 border-t pt-4">
-                <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">ماژول‌های فعال</p>
-                {[
-                  ["analytics", "آمار و گزارش‌گیری پیشرفته"],
-                  ["eprescribe", "نسخه الکترونیک"],
-                  ["customSms", "پیامک سفارشی"],
-                ].map(([key, label]) => (
-                  <div key={key} className="flex items-center justify-between p-3 bg-surface-muted rounded-xl">
-                    <span className="text-sm text-slate-700">{label}</span>
-                    <button onClick={() => setForm(p => ({...p, [key]: !p[key]}))}
-                      className={`w-10 h-6 rounded-full transition-colors relative ${form[key] ? "bg-primary-600" : "bg-slate-300"}`}>
-                      <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form[key] ? "right-0.5" : "left-0.5"}`} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {tab === 2 && (
-            <div className="space-y-4">
-              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                <p className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2"><Percent size={16}/> تنظیمات تخفیف</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-[11px] text-amber-700 mb-1">درصد تخفیف</label>
-                    <input className="input h-10" type="number" value={form.discount_percentage} onChange={e => setForm(p => ({...p, discount_percentage: parseInt(e.target.value) || 0}))} />
-                  </div>
-                  <div className="flex flex-col">
-                    <label className="block text-[11px] text-amber-700 mb-1">تاریخ شروع</label>
-                    <DatePicker
-                      value={form.discount_start_date}
-                      onChange={(date) => setForm(p => ({...p, discount_start_date: date?.toDate?.().toISOString() || ""} ))}
-                      calendar={persian}
-                      locale={persian_fa}
-                      calendarPosition="bottom-right"
-                      portal={true}
-                      fixMainPosition={true}
-                      zIndex={9999}
-                      containerClassName="w-full"
-                      inputClass="input h-10 text-xs ltr w-full"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <label className="block text-[11px] text-amber-700 mb-1">تاریخ پایان</label>
-                    <DatePicker
-                      value={form.discount_end_date}
-                      onChange={(date) => setForm(p => ({...p, discount_end_date: date?.toDate?.().toISOString() || ""} ))}
-                      calendar={persian}
-                      locale={persian_fa}
-                      calendarPosition="bottom-right"
-                      portal={true}
-                      fixMainPosition={true}
-                      zIndex={9999}
-                      containerClassName="w-full"
-                      inputClass="input h-10 text-xs ltr w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">لیست ویژگی‌ها (توضیحات در کارت)</label>
-                <div className="flex gap-2 mb-2">
-                  <input className="input h-10" value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="مثال: پشتیبانی ۲۴ ساعته" onKeyDown={e => e.key === 'Enter' && addFeature()} />
-                  <button onClick={addFeature} className="btn-secondary px-3"><Plus size={18}/></button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {form.features.map((f, i) => (
-                    <div key={i} className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-lg text-xs text-slate-700 border border-slate-200">
-                      {f}
-                      <button onClick={() => removeFeature(i)} className="text-slate-400 hover:text-red-500"><X size={12}/></button>
-                    </div>
-                  ))}
-                  {form.features.length === 0 && <p className="text-xs text-slate-400 italic">هیچ ویژگی ثبت نشده است</p>}
-                </div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">تعداد منشی مجاز</label>
+                <input className="input ltr text-left font-bold" type="number" min="1" value={form.maxSecretaries} onChange={e => setForm(p => ({...p, maxSecretaries: parseInt(e.target.value) || 1}))} />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">سهمیه پیامک رایگان</label>
+                <input className="input ltr text-left font-bold" type="number" min="0" value={form.smsCredits} onChange={e => setForm(p => ({...p, smsCredits: parseInt(e.target.value) || 0}))} />
               </div>
             </div>
-          )}
+
+            <div className="space-y-2.5 pt-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">فعال‌سازی ماژول‌های پکیج</p>
+              
+              {[
+                ["analytics", "آمار، گزارش‌گیری و نمودارهای پیشرفته مالی و نوبت‌دهی"],
+                ["eprescribe", "دسترسی کامل به ماژول نسخه الکترونیک بیمه سلامت و تأمین اجتماعی"],
+                ["customSms", "امکان اختصاص خط پیامکی دلخواه و شخصی‌سازی متون پیامکی"],
+              ].map(([key, label]) => (
+                <div key={key} className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-2xl transition-colors">
+                  <span className="text-xs font-bold text-slate-700">{label}</span>
+                  <button onClick={() => setForm(p => ({...p, [key]: !p[key]}))}
+                    className={`w-11 h-6.5 rounded-full transition-all relative ${form[key] ? "bg-primary-600" : "bg-slate-300"}`}>
+                    <span className={`absolute top-0.5 w-5.5 h-5.5 bg-white rounded-full shadow transition-transform ${form[key] ? "right-1" : "left-1"}`} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 3: ویژگی‌های سفارشی */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-100">
+              <Plus size={14} className="text-amber-500" /> ۳. ویژگی‌های متمایز کننده (آیتم‌های کارت پکیج)
+            </h4>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-1.5">افزودن ویژگی جدید</label>
+              <div className="flex gap-2">
+                <input className="input focus:ring-primary-500 h-11 text-xs" value={newFeature} onChange={e => setNewFeature(e.target.value)} placeholder="مثال: پشتیبانی تلفنی اختصاصی ۲۴ ساعته" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addFeature())} />
+                <button onClick={addFeature} className="btn-secondary px-4 hover:bg-slate-200"><Plus size={18}/></button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {form.features.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-primary-50/50 rounded-xl text-xs font-semibold text-primary-700 border border-primary-100">
+                  {f}
+                  <button onClick={() => removeFeature(i)} className="text-primary-400 hover:text-red-500 transition-colors"><X size={14}/></button>
+                </div>
+              ))}
+              {form.features.length === 0 && (
+                <div className="flex items-center gap-1.5 text-slate-400 text-xs italic py-2">
+                  <AlertCircle size={14} /> هیچ ویژگی سفارشی افزوده نشده است.
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
 
-        <div className="px-6 py-4 border-t border-surface-border flex gap-3 bg-slate-50">
-          <button onClick={onClose} className="btn-secondary flex-1 justify-center">انصراف</button>
-          <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-1 justify-center">
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {plan ? "بروزرسانی تغییرات" : "ذخیره پکیج جدید"}
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex gap-3">
+          <button onClick={onClose} className="btn-secondary flex-1 justify-center h-12 rounded-2xl">انصراف</button>
+          <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-1 justify-center h-12 rounded-2xl shadow-lg shadow-primary-100">
+            {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {plan ? "بروزرسانی پکیج" : "تایید و ایجاد پکیج"}
           </button>
         </div>
       </div>
@@ -294,7 +242,7 @@ function PlanModal({ open, onClose, onSave, plan }) {
   );
 }
 
-// ── صفحه اصلی ──
+// ── صفحه اصلی پکیج‌ها ──
 export default function PlatformPlans() {
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState([]);
@@ -337,15 +285,19 @@ export default function PlatformPlans() {
       await apiClient.delete(`/platform/plans/${plan.id}/`);
       fetchPlans();
     } catch (e) {
-      alert(e?.response?.data?.error || "خطا در حذف");
+      alert(e?.response?.data?.error || "خطا در حذف پکیج");
     }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-[60vh]"><Loader2 className="animate-spin text-primary-500" size={40} /></div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <Loader2 className="animate-spin text-primary-500" size={44} />
+        <p className="text-sm font-medium text-slate-400">در حال بارگذاری لیست پکیج‌های اشتراک...</p>
+      </div>
+    );
   }
 
-  // داده‌های نمودار
   const chartData = plans.map((p, idx) => ({
     name: p.title,
     value: p.active_clinics_count || 0,
@@ -355,206 +307,233 @@ export default function PlatformPlans() {
   const totalClinics = plans.reduce((acc, p) => acc + (p.active_clinics_count || 0), 0);
 
   return (
-    <div className="space-y-6 fade-in" dir="rtl">
-      {/* Header & Stats */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold text-slate-800">بسته های اشتراک</h1>
-              <p className="text-sm text-slate-500 mt-0.5">مدیریت محصولات و تحلیل سهم بازار</p>
-            </div>
-            <button onClick={() => { setEditPlan(null); setShowModal(true); }} className="btn-primary"><Plus size={16} />پکیج جدید</button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="card p-5 border-r-4 border-r-blue-500">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-50 rounded-2xl text-blue-600"><Package size={24}/></div>
-                <div>
-                  <p className="text-xs text-slate-500">تعداد کل پکیج‌ها</p>
-                  <p className="text-2xl font-bold text-slate-800">{fmt(plans.length)}</p>
-                </div>
-              </div>
-            </div>
-            <div className="card p-5 border-r-4 border-r-emerald-500">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600"><Users size={24}/></div>
-                <div>
-                  <p className="text-xs text-slate-500">اشتراک‌های فعال</p>
-                  <p className="text-2xl font-bold text-slate-800">{fmt(totalClinics)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-8 fade-in" dir="rtl">
+      
+      {/* Header section with clean design */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800">بسته‌های اشتراک سیستم</h1>
+          <p className="text-sm text-slate-400 mt-1.5 font-medium">پایش، ایجاد و مدیریت پلن‌های درآمدی پلتفرم و مشاهده توزیع بازار</p>
         </div>
-
-        {/* Chart */}
-        <div className="lg:w-80 card p-4 flex flex-col items-center justify-center min-h-[200px]">
-          <h3 className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-2 self-start"><PieChartIcon size={14}/> سهم بازار خدمات</h3>
-          {chartData.length > 0 ? (
-            <div className="w-full h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={chartData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5} dataKey="value">
-                    {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400 italic">دیتایی برای نمایش وجود ندارد</p>
-          )}
-        </div>
+        <button onClick={() => { setEditPlan(null); setShowModal(true); }} className="btn-primary py-3.5 px-6 shadow-lg shadow-primary-100 rounded-2xl text-xs font-bold shrink-0">
+          <Plus size={18} /> ایجاد پکیج جدید
+        </button>
       </div>
 
-      {/* Plan Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {plans.map((plan) => {
-          const c = colorMap[plan.color] || colorMap.slate;
-          const hasDiscount = plan.discount_percentage > 0;
-          return (
-            <div key={plan.id} className={`card border-2 relative flex flex-col ${c.card} hover:shadow-lg transition-all duration-300`}>
-              {plan.badge && (
-                <div className="absolute -top-3 right-5">
-                  <span className={`badge ${c.badge} px-3 py-1 text-[10px] font-bold uppercase tracking-wider`}>{plan.badge}</span>
-                </div>
-              )}
-              
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">{plan.title}</h3>
-                  <p className="text-xs text-slate-500">{plan.duration}</p>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => { setEditPlan(plan); setShowModal(true); }}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-primary-600 transition-colors">
-                    <Edit2 size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(plan)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
+      {/* KPI Stats & Market Share Chart */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        
+        {/* KPI Cards */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="card p-6 border-slate-100 flex items-center gap-5 bg-white/80 backdrop-blur-md shadow-xl shadow-slate-100/50 relative overflow-hidden group">
+            <div className="absolute right-0 top-0 h-1.5 w-full bg-blue-500" />
+            <div className="p-4 bg-blue-50 rounded-2xl text-blue-600 transition-colors group-hover:bg-blue-100">
+              <Package size={26}/>
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-wider">تعداد پکیج‌های فعال</p>
+              <p className="text-3xl font-black text-slate-800 mt-1">{fmt(plans.length)} <span className="text-xs text-slate-400 font-bold">پکیج</span></p>
+            </div>
+          </div>
 
-              <div className="mb-4">
-                {hasDiscount ? (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-3xl font-black text-slate-900">{fmt(plan.current_price)}</span>
-                      <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-bold">%{fmt(plan.discount_percentage)}</span>
-                    </div>
-                    <div className="text-sm text-slate-400 line-through">{fmt(plan.price)} تومان</div>
-                  </div>
-                ) : (
-                  <div>
-                    <span className="text-3xl font-black text-slate-900">{fmt(plan.price)}</span>
-                    <span className="text-sm text-slate-500 mr-1">تومان</span>
-                  </div>
-                )}
-              </div>
+          <div className="card p-6 border-slate-100 flex items-center gap-5 bg-white/80 backdrop-blur-md shadow-xl shadow-slate-100/50 relative overflow-hidden group">
+            <div className="absolute right-0 top-0 h-1.5 w-full bg-emerald-500" />
+            <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600 transition-colors group-hover:bg-emerald-100">
+              <Users size={26}/>
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-wider">اشتراک‌های فعال مطب‌ها</p>
+              <p className="text-3xl font-black text-slate-800 mt-1">{fmt(totalClinics)} <span className="text-xs text-slate-400 font-bold">کلینیک</span></p>
+            </div>
+          </div>
+        </div>
 
-              <p className="text-xs text-slate-600 mb-5 leading-relaxed min-h-[32px]">{plan.description || "بدون توضیحات اضافی"}</p>
-
-              {/* Stats mini bar */}
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl mb-5">
-                <div className="text-center flex-1 border-l border-slate-200">
-                  <p className="text-[10px] text-slate-400 mb-0.5">کلینیک‌ها</p>
-                  <p className="text-sm font-bold text-slate-700">{fmt(plan.active_clinics_count)}</p>
+        {/* Market Share Chart */}
+        <div className="lg:w-96 card p-5 border-slate-100 bg-white/80 backdrop-blur-md shadow-xl shadow-slate-100/50 flex flex-col">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <PieChartIcon size={15} className="text-primary-500" /> سهم بازار بسته‌های اشتراک
+          </h3>
+          <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-4 min-h-[140px]">
+            {chartData.length > 0 ? (
+              <>
+                <div className="w-32 h-32 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={chartData} cx="50%" cy="50%" innerRadius={35} outerRadius={50} paddingAngle={4} dataKey="value">
+                        {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} مطب`, 'تعداد']} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="text-center flex-1">
-                  <p className="text-[10px] text-slate-400 mb-0.5">سهم بازار</p>
-                  <p className="text-sm font-bold text-slate-700">%{fmt(plan.market_share)}</p>
-                </div>
-              </div>
-
-              {/* Limits */}
-              <div className="space-y-3 mb-6 flex-1">
-                {[
-                  ["پزشک مجاز", plan.maxDoctors, <Users size={14}/>],
-                  ["منشی مجاز", plan.maxSecretaries, <Users size={14}/>],
-                  ["پیامک رایگان", fmt(plan.smsCredits), <Calendar size={14}/>],
-                ].map(([label, val, icon]) => (
-                  <div key={label} className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500 flex items-center gap-2">{icon} {label}</span>
-                    <span className="font-bold text-slate-800">{val}</span>
-                  </div>
-                ))}
-
-                <div className="pt-3 border-t border-slate-100 grid grid-cols-3 gap-2">
-                  <div className={`text-[10px] text-center p-1 rounded-md ${plan.flags?.analytics ? "bg-emerald-50 text-emerald-700 font-bold" : "bg-slate-50 text-slate-400"}`}>آمار</div>
-                  <div className={`text-[10px] text-center p-1 rounded-md ${plan.flags?.eprescribe ? "bg-emerald-50 text-emerald-700 font-bold" : "bg-slate-50 text-slate-400"}`}>نسخه</div>
-                  <div className={`text-[10px] text-center p-1 rounded-md ${plan.flags?.customSms ? "bg-emerald-50 text-emerald-700 font-bold" : "bg-slate-50 text-slate-400"}`}>پیامک</div>
-                </div>
-              </div>
-
-              {/* Features List */}
-              {plan.features?.length > 0 && (
-                <div className="space-y-2 pt-4 border-t border-slate-100 mb-6">
-                  {plan.features.slice(0, 3).map(f => (
-                    <div key={f} className="flex items-center gap-2 text-xs text-slate-600">
-                      <Check size={12} className="text-emerald-500 flex-shrink-0" />
-                      {f}
+                <div className="flex-1 space-y-2 w-full">
+                  {chartData.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs font-bold text-slate-600">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <span className="truncate max-w-[110px]">{item.name}</span>
+                      </span>
+                      <span className="text-slate-400 font-black">%{roundShare(item.value, totalClinics)}</span>
                     </div>
                   ))}
-                  {plan.features.length > 3 && <p className="text-[10px] text-primary-500 font-medium">+{plan.features.length - 3} ویژگی دیگر</p>}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-6 text-slate-400 italic text-xs flex items-center gap-1.5">
+                <AlertCircle size={14} /> دیتایی جهت تحلیل نموداری ثبت نشده است
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Subscription Cards Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {plans.map((plan) => {
+          const c = colorMap[plan.color] || colorMap.slate;
+          return (
+            <div key={plan.id} className={`card border-slate-100 bg-white shadow-xl shadow-slate-100/30 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:translate-y-[-4px]`}>
+              
+              {/* Color accent bar at the top instead of full border matching */}
+              <div className={`absolute top-0 right-0 left-0 h-1.5 ${c.accent}`} />
+              
+              <div className="pt-3 pb-5 flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-black text-slate-800">{plan.title}</h3>
+                  <div className="inline-flex items-center gap-1.5 mt-1 bg-slate-50 border border-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                    <span className={`w-1.5 h-1.5 rounded-full ${c.accent}`} />
+                    {plan.duration}
+                  </div>
+                </div>
+              </div>
+
+              {/* Clean Pricing display without any messy discount rows */}
+              <div className="mb-4 bg-slate-50/50 p-4 border border-slate-100 rounded-2xl flex items-baseline justify-between">
+                <span className="text-xs text-slate-400 font-bold">هزینه اشتراک:</span>
+                <div>
+                  <span className="text-2xl font-black text-slate-800">{fmt(plan.price)}</span>
+                  <span className="text-xs text-slate-400 font-bold mr-1">تومان</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 mb-5 leading-relaxed min-h-[38px]">{plan.description || "بدون توضیحات اضافی"}</p>
+
+              {/* Resource Limits with fine design */}
+              <div className="space-y-2.5 mb-5 bg-slate-50/40 p-3.5 border border-slate-100/60 rounded-2xl">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-bold flex items-center gap-1.5"><Users size={13}/> ادمین و پزشک مجاز</span>
+                  <span className="font-black text-slate-700">{fmt(plan.maxDoctors)} پزشک</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-bold flex items-center gap-1.5"><Users size={13}/> منشی مجاز</span>
+                  <span className="font-black text-slate-700">{fmt(plan.maxSecretaries)} منشی</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-bold flex items-center gap-1.5"><MessageSquare size={13}/> سهمیه پیامک رایگان</span>
+                  <span className="font-black text-slate-700">{fmt(plan.smsCredits)} پیامک</span>
+                </div>
+              </div>
+
+              {/* Enabled modules as beautiful pill tags */}
+              <div className="pt-3 pb-4 border-t border-slate-100 flex flex-wrap gap-2 mb-4">
+                {[
+                  ["analytics", "آمار و گزارش"],
+                  ["eprescribe", "نسخه الکترونیک"],
+                  ["customSms", "پیامک اختصاصی"]
+                ].map(([key, label]) => {
+                  const active = plan.flags?.[key];
+                  return (
+                    <span key={key} className={`text-[10px] font-bold px-2 py-1 rounded-lg border flex items-center gap-1 ${active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 text-slate-400 border-slate-100"}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-300"}`} />
+                      {label}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Features bullets with green checks */}
+              {plan.features?.length > 0 && (
+                <div className="space-y-2 pb-5 border-b border-slate-100 mb-5 flex-1">
+                  {plan.features.slice(0, 4).map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs font-medium text-slate-600">
+                      <Check size={14} className="text-emerald-500 shrink-0" />
+                      <span className="truncate">{f}</span>
+                    </div>
+                  ))}
+                  {plan.features.length > 4 && (
+                    <p className="text-[10px] text-primary-600 font-bold pr-5">+{plan.features.length - 4} ویژگی بیشتر</p>
+                  )}
                 </div>
               )}
 
-              <button onClick={() => { setEditPlan(plan); setShowModal(true); }}
-                className={`mt-auto w-full py-3 rounded-xl text-sm font-bold transition shadow-sm hover:shadow-md ${c.btn}`}>
-                مدیریت و ویرایش
-              </button>
+              {/* Action buttons (Clean grouping at bottom) */}
+              <div className="mt-auto flex gap-2 pt-2">
+                <button onClick={() => { setEditPlan(plan); setShowModal(true); }}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors">
+                  <Edit2 size={13} /> ویرایش پکیج
+                </button>
+                <button onClick={() => handleDelete(plan)}
+                  className="bg-rose-50 hover:bg-rose-100 text-rose-600 w-12 rounded-2xl flex items-center justify-center transition-colors border border-rose-100" title="حذف پکیج">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+
             </div>
           );
         })}
       </div>
 
-      {/* Plans Market List */}
-      <div className="card overflow-hidden">
-        <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-700">لیست توزیع اشتراک‌ها</h3>
-          <span className="text-[11px] font-medium text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200">بروزرسانی شده</span>
+      {/* Subscription List Table */}
+      <div className="card border-slate-100 shadow-xl shadow-slate-100/50 overflow-hidden">
+        <div className="px-6 py-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-black text-slate-700">توزیع اشتراک‌ها بر اساس بسته‌ها</h3>
+            <p className="text-[10px] text-slate-400 mt-1">آمار تحلیلی سهم بازار و نهایی پکیج‌های ثبت شده در سیستم</p>
+          </div>
         </div>
-        <div className="table-container">
-          <table className="w-full">
+        
+        <div className="table-container border-none rounded-none overflow-x-auto">
+          <table className="w-full text-right border-collapse">
             <thead>
-              <tr className="bg-white">
-                <th className="text-right">عنوان پکیج</th>
-                <th className="text-center">تعداد مطب‌های فعال</th>
-                <th className="text-center">سهم بازار</th>
-                <th className="text-center">وضعیت تخفیف</th>
-                <th className="text-left">قیمت نهایی</th>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-xs font-black text-slate-500 text-right">عنوان پکیج</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 text-center">مطب‌های متصل</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 text-center">سهم بازار</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 text-left">قیمت دوره</th>
               </tr>
             </thead>
-            <tbody>
-              {plans.map(p => (
-                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="font-bold text-slate-700">{p.title}</td>
-                  <td className="text-center font-medium text-blue-600">{fmt(p.active_clinics_count)} مطب</td>
-                  <td className="text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
-                        <div className="h-full bg-primary-500" style={{ width: `${p.market_share}%` }} />
+            <tbody className="divide-y divide-slate-50">
+              {plans.map(p => {
+                const c = colorMap[p.color] || colorMap.slate;
+                return (
+                  <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center gap-3">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${c.accent}`} />
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">{p.title}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">پکیج {p.duration}</p>
+                        </div>
                       </div>
-                      <span className="text-xs font-bold text-slate-600">%{fmt(p.market_share)}</span>
-                    </div>
-                  </td>
-                  <td className="text-center">
-                    {p.discount_percentage > 0 ? (
-                      <span className="badge bg-red-50 text-red-600 border border-red-100 text-[10px]">فعال (%{fmt(p.discount_percentage)})</span>
-                    ) : (
-                      <span className="text-slate-300 text-[10px]">غیرفعال</span>
-                    )}
-                  </td>
-                  <td className="text-left font-black text-slate-800 ltr">{fmt(p.current_price)} T</td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 text-center align-middle font-bold text-primary-600 text-sm">
+                      {fmt(p.active_clinics_count)} کلینیک
+                    </td>
+                    <td className="px-6 py-4 text-center align-middle font-bold text-slate-600 text-sm">
+                      % {fmt(p.market_share)}
+                    </td>
+                    <td className="px-6 py-4 text-left align-middle font-black text-slate-700 text-sm">
+                      {fmt(p.price)} <span className="text-[10px] text-slate-400 font-bold">تومان</span>
+                    </td>
+                  </tr>
+                );
+              })}
               {plans.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-slate-400 italic">هیچ پکیجی تعریف نشده است</td>
+                  <td colSpan={4} className="text-center py-12 text-slate-400 font-bold italic">
+                    هیچ پکیجی در سیستم ثبت نشده است.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -566,4 +545,10 @@ export default function PlatformPlans() {
       <PlanModal open={showModal} onClose={() => setShowModal(false)} onSave={handleSave} plan={editPlan} />
     </div>
   );
+}
+
+// کمکی سهم درصد
+function roundShare(val, total) {
+  if (!total) return 0;
+  return Math.round((val / total) * 100);
 }

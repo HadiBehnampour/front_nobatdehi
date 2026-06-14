@@ -123,7 +123,7 @@ const useAuth = () => {
         localStorage.setItem('user', JSON.stringify(data.user));
 
         const role = (data.user?.role || '').toLowerCase().trim();
-        const routeMap = { platform_admin:'/platform/dashboard',clinic_admin:'/admin',doctor:'/admin',secretary:'/admin',admin:'/admin',patient:'/patient' };
+        const routeMap = { platform_admin:'/platform/dashboard',clinic_admin:'/clinic',doctor:'/admin',secretary:'/admin',admin:'/admin',patient:'/patient' };
         navigate(routeMap[role] || '/');
         return;
       }

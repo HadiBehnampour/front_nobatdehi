@@ -82,10 +82,10 @@ body {
 .sidebar-link.active { background: var(--color-primary-50); color: var(--color-primary-700); }
 
 /* Tables */
-.table-container { overflow-x: auto; border-radius: 0.75rem; border: 1px solid var(--color-surface-border); background: white; }
+.table-container { overflow-x: auto; border-radius: 0.75rem; border: 1px solid var(--color-surface-border); }
 table { width: 100%; font-size: 0.875rem; border-collapse: collapse; }
 thead tr { background: var(--color-surface-muted); border-bottom: 1px solid var(--color-surface-border); }
-thead th { padding: 0.75rem 1rem; text-align: right; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+thead th { padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
 tbody tr { border-bottom: 1px solid var(--color-surface-border); transition: background 0.2s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: rgba(241, 245, 249, 0.5); }

@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 // --- Layouts ---
 import PatientLayout from './layouts/PatientLayout';
 import AdminLayout from './layouts/AdminLayout';
+import ClinicAdminLayout from './layouts/ClinicAdminLayout';
 
 // --- Protected Routes ---
 import { AdminRoute, PatientRoute } from './components/ProtectedRoute';
@@ -32,11 +33,22 @@ const AdminFinance = lazy(() => import('./pages/admin/finance'));
 const AdminSettings = lazy(() => import('./pages/admin/settings'));
 const AdminStaff = lazy(() => import('./pages/admin/staff'));
 
+// صفحات پنل مدیر مطب (کاملاً اختصاصی و تفکیک شده)
+const ClinicDashboard = lazy(() => import('./pages/clinic/dashboard'));
+const ClinicAppointments = lazy(() => import('./pages/clinic/appointments'));
+const ClinicPatients = lazy(() => import('./pages/clinic/patients'));
+const ClinicPatientHistory = lazy(() => import('./pages/clinic/patient-history'));
+const ClinicConsults = lazy(() => import('./pages/clinic/Consults'));
+const ClinicFinance = lazy(() => import('./pages/clinic/finance'));
+const ClinicSettings = lazy(() => import('./pages/clinic/settings'));
+const ClinicStaff = lazy(() => import('./pages/clinic/staff'));
+
 // صفحات پلتفرم
 import PlatformLayout from './layouts/PlatformLayout';
 const PlatformDashboard = lazy(() => import('./pages/platform/Dashboard'));
 const PlatformClinics = lazy(() => import('./pages/platform/Clinics'));
 const PlatformPlans = lazy(() => import('./pages/platform/Plans'));
+const PlatformFinancials = lazy(() => import('./pages/platform/Financials'));
 
 // --- Page Loader ---
 const PageLoader = () => (
@@ -108,6 +120,22 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
+          {/* پنل اختصاصی مدیر مطب (کاملاً تفکیک شده پوشه‌به‌پوشه) */}
+          <Route path="/clinic" element={
+            <AdminRoute>
+              <ClinicAdminLayout />
+            </AdminRoute>
+          }>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<ClinicDashboard />} />
+            <Route path="appointments" element={<ClinicAppointments />} />
+            <Route path="patients" element={<ClinicPatients />} />
+            <Route path="patient-history/:id" element={<ClinicPatientHistory />} />
+            <Route path="finance" element={<ClinicFinance />} />
+            <Route path="staff" element={<ClinicStaff />} />
+            <Route path="settings" element={<ClinicSettings />} />
+          </Route>
+
           {/* پنل پلتفرم */}
           <Route path="/platform" element={
             <AdminRoute><PlatformLayout /></AdminRoute>
@@ -116,6 +144,7 @@ function App() {
             <Route path="dashboard" element={<PlatformDashboard />} />
             <Route path="clinics" element={<PlatformClinics />} />
             <Route path="plans" element={<PlatformPlans />} />
+            <Route path="financials" element={<PlatformFinancials />} />
           </Route>
 
           {/* مسیر اشتباه */}

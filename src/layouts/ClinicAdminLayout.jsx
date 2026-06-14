@@ -4,7 +4,7 @@ import {
   LayoutGrid, UserCog, Calendar, Users, MessageSquare, Settings, LogOut, Menu, Stethoscope, Wallet, Bell, X 
 } from 'lucide-react';
 
-export default function AdminLayout() {
+export default function ClinicAdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,14 +15,14 @@ export default function AdminLayout() {
       try {
         const parsed = JSON.parse(user);
         return {
-          name: parsed.name || parsed.fullName || 'مدیر سیستم',
+          name: parsed.name || parsed.fullName || 'مدیر مطب',
           initial: (parsed.name || parsed.fullName || 'A').charAt(0).toUpperCase()
         };
       } catch {
-        return { name: 'مدیر سیستم', initial: 'A' };
+        return { name: 'مدیر مطب', initial: 'A' };
       }
     }
-    return { name: 'مدیر سیستم', initial: 'A' };
+    return { name: 'مدیر مطب', initial: 'A' };
   };
 
   const adminInfo = getAdminInfo();
@@ -37,31 +37,15 @@ export default function AdminLayout() {
     day: 'numeric',
   });
 
-  // ── نقش کاربر ──
-  const getUserRole = () => {
-    try { return JSON.parse(localStorage.getItem('user')).role; } catch { return 'admin'; }
-  };
-  const role = getUserRole();
-
-  const ROLE_LABELS = {
-    platform_admin: 'مدیر پلتفرم', 
-    clinic_admin: 'مدیر مطب',
-    doctor: 'پزشک', 
-    secretary: 'منشی', 
-    admin: 'مدیر سیستم',
-  };
-
-  // ── منوی هوشمند بر اساس نقش ──
-  const allMenuItems = [
-    { title: 'داشبورد', icon: LayoutGrid, path: '/admin/dashboard', roles: ['platform_admin','clinic_admin','doctor','secretary','admin'] },
-    { title: 'مدیریت نوبت‌ها', icon: Calendar, path: '/admin/appointments', roles: ['clinic_admin','secretary','admin'] },
-    { title: 'لیست بیماران', icon: Users, path: '/admin/patients', roles: ['clinic_admin','doctor','secretary','admin'] },
-    { title: 'مشاوره‌ها', icon: MessageSquare, path: '/admin/consults', roles: ['clinic_admin','doctor','admin'] },
-    { title: 'امور مالی', icon: Wallet, path: '/admin/finance', roles: ['clinic_admin','admin'] },
-    { title: 'مدیریت پرسنل', icon: UserCog, path: '/admin/staff', roles: ['clinic_admin','admin'] },
-    { title: 'تنظیمات مطب', icon: Settings, path: '/admin/settings', roles: ['clinic_admin','admin'] },
+  // منوی اختصاصی و ثابت برای مدیر مطب بدون تداخل با بقیه نقش‌ها
+  const menuItems = [
+    { title: 'داشبورد', icon: LayoutGrid, path: '/clinic/dashboard' },
+    { title: 'مدیریت نوبت‌ها', icon: Calendar, path: '/clinic/appointments' },
+    { title: 'لیست بیماران', icon: Users, path: '/clinic/patients' },
+    { title: 'امور مالی', icon: Wallet, path: '/clinic/finance' },
+    { title: 'مدیریت پرسنل', icon: UserCog, path: '/clinic/staff' },
+    { title: 'تنظیمات مطب', icon: Settings, path: '/clinic/settings' },
   ];
-  const menuItems = allMenuItems.filter(item => item.roles.includes(role));
 
   const handleLogout = () => {
     localStorage.removeItem('access');
@@ -73,7 +57,7 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-surface flex text-right" dir="rtl">
       
-      {/* ── Sidebar (مشابه استایل شکیل و سپید مدیر پلتفرم و پروژه نمونه Arena) ── */}
+      {/* ── Sidebar (مخصوص مدیر مطب) ── */}
       <aside 
         className={`
           fixed right-0 top-0 h-screen bg-white border-l border-surface-border flex flex-col z-30 transition-transform duration-300 ease-in-out
@@ -91,7 +75,6 @@ export default function AdminLayout() {
             <p className="font-bold text-slate-800 text-sm leading-none">اسمارت‌نوبت</p>
             <p className="text-[10px] text-slate-400 mt-0.5">سیستم یکپارچه مدیریت مطب</p>
           </div>
-          {/* دکمه بستن منو در موبایل */}
           <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden mr-auto p-1.5 rounded-lg hover:bg-slate-100 text-slate-400">
             <X size={16} />
           </button>
@@ -105,7 +88,7 @@ export default function AdminLayout() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-800 truncate">{adminInfo.name}</p>
-              <p className="text-[11px] text-slate-500 font-medium">{ROLE_LABELS[role] || 'کاربر سیستم'}</p>
+              <p className="text-[11px] text-slate-500 font-medium">مدیر مطب</p>
             </div>
           </div>
         </div>
