@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import PatientLayout from './layouts/PatientLayout';
 import AdminLayout from './layouts/AdminLayout';
 import ClinicAdminLayout from './layouts/ClinicAdminLayout';
+import SecretaryLayout from './layouts/SecretaryLayout';
 
 // --- Protected Routes ---
 import { AdminRoute, PatientRoute } from './components/ProtectedRoute';
@@ -42,6 +43,12 @@ const ClinicConsults = lazy(() => import('./pages/clinic/Consults'));
 const ClinicFinance = lazy(() => import('./pages/clinic/finance'));
 const ClinicSettings = lazy(() => import('./pages/clinic/settings'));
 const ClinicStaff = lazy(() => import('./pages/clinic/staff'));
+
+// صفحات پنل منشی مطب (کاملاً اختصاصی و تفکیک شده)
+const SecretaryDashboard = lazy(() => import('./pages/secretary/dashboard'));
+const SecretaryAppointments = lazy(() => import('./pages/secretary/appointments'));
+const SecretaryPatients = lazy(() => import('./pages/secretary/patients'));
+const SecretarySettings = lazy(() => import('./pages/secretary/settings'));
 
 // صفحات پلتفرم
 import PlatformLayout from './layouts/PlatformLayout';
@@ -134,6 +141,19 @@ function App() {
             <Route path="finance" element={<ClinicFinance />} />
             <Route path="staff" element={<ClinicStaff />} />
             <Route path="settings" element={<ClinicSettings />} />
+          </Route>
+
+          {/* پنل اختصاصی منشی مطب (کاملاً تفکیک شده پوشه‌به‌پوشه) */}
+          <Route path="/secretary" element={
+            <AdminRoute>
+              <SecretaryLayout />
+            </AdminRoute>
+          }>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<SecretaryDashboard />} />
+            <Route path="appointments" element={<SecretaryAppointments />} />
+            <Route path="patients" element={<SecretaryPatients />} />
+            <Route path="settings" element={<SecretarySettings />} />
           </Route>
 
           {/* پنل پلتفرم */}

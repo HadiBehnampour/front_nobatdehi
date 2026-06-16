@@ -29,6 +29,7 @@ export const PatientRoute = ({ children }) => {
   const role = getUserRole();
   if (role !== 'patient') {
     if (role === 'clinic_admin') return <Navigate to="/clinic/dashboard" replace />;
+    if (role === 'secretary') return <Navigate to="/secretary/dashboard" replace />;
     return <Navigate to="/admin/dashboard" replace />;
   }
   return children;
